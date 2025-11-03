@@ -9,7 +9,7 @@ import google.generativeai as genai  # For the Gemini integration
 # Page layout
 ## Page expands to full width
 st.set_page_config(
-    page_title='🫀 ECG Classification',
+    page_title='🫀 Phân loại ECG',
     page_icon="https://api.iconify.design/openmoji/anatomical-heart.svg?width=500",
     layout='wide',
     initial_sidebar_state="expanded"
@@ -195,7 +195,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Create tabs for different sections of the app
-tabs = st.tabs(["📊 ECG Classification", "💬 Ask the Cardio"])
+tabs = st.tabs(["📊 Phân loại ECG", "💬 Hỏi đáp Tim mạch"])
 
 #---------------------------------#
 # Data preprocessing and Model building
@@ -222,7 +222,8 @@ def read_ecg_preprocessing(uploaded_ecg):
     return uploaded_ecg
 
 model_path = 'models/weights-best.hdf5'
-classes = ['Normal','Atrial Fibrillation','Other','Noise']
+classes = ['Bình thường','Rung nhĩ','Khác','Nhiễu']
+classes_en = ['Normal','Atrial Fibrillation','Other','Noise']
 
 @st.cache_resource
 def get_model(model_path):
@@ -244,29 +245,29 @@ def visualize_ecg(ecg, FS):
 #---------------------------------#
 # Sidebar - Collects user input features into dataframe
 with st.sidebar:
-    st.markdown("<h2 style='text-align: center; color: #ffffff;'>❤️ ECG Analysis Tool</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #ffffff;'>❤️ Công cụ Phân tích ECG</h2>", unsafe_allow_html=True)
     st.markdown("<hr>", unsafe_allow_html=True)
     
-    st.markdown("### 1. Upload your ECG")
-    uploaded_file = st.file_uploader("Upload your ECG in .mat format", type=["mat"])
+    st.markdown("### 1. Tải lên ECG của bạn")
+    uploaded_file = st.file_uploader("Tải file ECG định dạng .mat", type=["mat"])
 
     st.markdown("<hr>", unsafe_allow_html=True)
 
     file_gts = {
-        "A00001": "Normal",
-        "A00002": "Normal",
-        "A00003": "Normal",
-        "A00004": "Atrial Fibrilation",
-        "A00005": "Other",
-        "A00006": "Normal",
-        "A00007": "Normal",
-        "A00008": "Other",
-        "A00009": "Atrial Fibrilation",
-        "A00010": "Normal",
-        "A00015": "Atrial Fibrilation",
-        "A00205": "Noise",
-        "A00022": "Noise",
-        "A00034": "Noise",
+        "A00001": "Bình thường",
+        "A00002": "Bình thường",
+        "A00003": "Bình thường",
+        "A00004": "Rung nhĩ",
+        "A00005": "Khác",
+        "A00006": "Bình thường",
+        "A00007": "Bình thường",
+        "A00008": "Khác",
+        "A00009": "Rung nhĩ",
+        "A00010": "Bình thường",
+        "A00015": "Rung nhĩ",
+        "A00205": "Nhiễu",
+        "A00022": "Nhiễu",
+        "A00034": "Nhiễu",
     }
     
     valfiles = [
@@ -278,9 +279,9 @@ with st.sidebar:
     ]
 
     if uploaded_file is None:
-        st.markdown("### 2. Or use a file from the validation set")
+        st.markdown("### 2. Hoặc chọn file mẫu")
         pre_trained_ecg = st.selectbox(
-            'Select a sample ECG',
+            'Chọn ECG mẫu',
             valfiles,
             format_func=lambda x: f'{x} ({(file_gts.get(x.replace(".mat","")))})' if ".mat" in x else x,
             index=1,
@@ -290,16 +291,16 @@ with st.sidebar:
             if not uploaded_file:
                 uploaded_file = f
     else:
-        st.info("Remove the file above to demo using the validation set.")
+        st.info("Xóa file trên để sử dụng file mẫu.")
 
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<div class='footer-text'>Made by <a href='https://github.com/MainakVerse'>Mainak</a></div>", unsafe_allow_html=True)
+    st.markdown("<div class='footer-text'>Phát triển bởi <a href='#'>BS. Hà Ngọc Cường</a></div>", unsafe_allow_html=True)
 
 #---------------------------------#
 # Main panel - Tab 1: ECG Classification
 with tabs[0]:
-    st.markdown("<h1 class='main-header'>🫀 ECG Classification</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='sub-header'>Detect Atrial Fibrillation, Normal Rhythm, Other Rhythm, or Noise from your ECG</p>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-header'>🫀 Phân loại ECG</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='sub-header'>Phát hiện Rung nhĩ, Nhịp bình thường, Nhịp khác, hoặc Nhiễu từ ECG của bạn</p>", unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -310,35 +311,35 @@ with tabs[0]:
         col1, col2 = st.columns([0.55, 0.45])
 
         with col1:  # visualize ECG
-            st.markdown("### Visualize ECG")
-            with st.spinner("Processing ECG data..."):
+            st.markdown("### Hiển thị ECG")
+            with st.spinner("Đang xử lý dữ liệu ECG..."):
                 ecg = read_ecg_preprocessing(uploaded_file)
                 fig = visualize_ecg(ecg, FS=300)
                 st.pyplot(fig, use_container_width=True)
 
         with col2:  # classify ECG
-            st.markdown("### Model Predictions")
-            with st.spinner(text="Running Model..."):
+            st.markdown("### Kết quả Phân tích")
+            with st.spinner(text="Đang chạy mô hình..."):
                 pred, conf = get_prediction(ecg, model)
             
             # st.markdown("<div class='prediction-box'>", unsafe_allow_html=True)
-            st.markdown(f"<h3>ECG classified as <span class='result-highlight'>{pred}</span></h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3>ECG được phân loại là <span class='result-highlight'>{pred}</span></h3>", unsafe_allow_html=True)
             
             pred_confidence = conf[0, np.argmax(conf)]*100
-            st.markdown(f"<p>Confidence: <b>{pred_confidence:.1f}%</b></p>", unsafe_allow_html=True)
+            st.markdown(f"<p>Độ tin cậy: <b>{pred_confidence:.1f}%</b></p>", unsafe_allow_html=True)
             
-            st.markdown("#### Probability Distribution")
+            st.markdown("#### Phân bố Xác suất")
             
             # Create a bar chart for the confidence levels
             conf_data = {classes[i]: float(conf[0,i]*100) for i in range(len(classes))}
-            chart_data = {"Rhythm Type": list(conf_data.keys()), "Confidence (%)": list(conf_data.values())}
+            chart_data = {"Loại Nhịp": list(conf_data.keys()), "Độ tin cậy (%)": list(conf_data.values())}
             
-            st.bar_chart(chart_data, x="Rhythm Type", y="Confidence (%)", use_container_width=True)
+            st.bar_chart(chart_data, x="Loại Nhịp", y="Độ tin cậy (%)", use_container_width=True)
             
             # Create a table with detailed confidence levels
-            st.markdown("#### Detailed Results")
+            st.markdown("#### Kết quả Chi tiết")
             mkd_pred_table = [
-                "| Rhythm Type | Confidence |",
+                "| Loại Nhịp | Độ tin cậy |",
                 "| --- | --- |"
             ]
             for i in range(len(classes)):
@@ -348,16 +349,16 @@ with tabs[0]:
             st.markdown("</div>", unsafe_allow_html=True)
             
             # Include interpretation info
-            if pred == "Atrial Fibrillation":
-                st.info("📌 Atrial Fibrillation is characterized by irregular and rapid heart rhythm. This condition increases the risk of stroke and heart failure.")
-            elif pred == "Normal":
-                st.success("✅ Your ECG shows a normal heart rhythm pattern. Regular check-ups are still recommended for heart health monitoring.")
-            elif pred == "Other":
-                st.warning("⚠️ The ECG shows an abnormal rhythm that is not classified as Atrial Fibrillation. Further clinical assessment is recommended.")
-            elif pred == "Noise":
-                st.error("❗ The ECG contains too much noise for reliable interpretation. Consider retaking the ECG in a more controlled environment.")
+            if pred == "Rung nhĩ":
+                st.info("📌 Rung nhĩ được đặc trưng bởi nhịp tim không đều và nhanh. Tình trạng này làm tăng nguy cơ đột quỵ và suy tim.")
+            elif pred == "Bình thường":
+                st.success("✅ ECG của bạn cho thấy nhịp tim bình thường. Vẫn khuyến nghị kiểm tra sức khỏe tim mạch định kỳ.")
+            elif pred == "Khác":
+                st.warning("⚠️ ECG cho thấy nhịp bất thường không được phân loại là Rung nhĩ. Nên đánh giá lâm sàng thêm.")
+            elif pred == "Nhiễu":
+                st.error("❗ ECG chứa quá nhiều nhiễu để có thể phân tích chính xác. Nên thực hiện lại ECG trong môi trường kiểm soát tốt hơn.")
     else:
-        st.info("👈 Please upload an ECG file or select a sample from the sidebar to start.")
+        st.info("👈 Vui lòng tải lên file ECG hoặc chọn mẫu từ thanh bên để bắt đầu.")
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.image("https://api.iconify.design/openmoji/anatomical-heart.svg?width=300", use_container_width=True)
@@ -365,12 +366,12 @@ with tabs[0]:
 #---------------------------------#
 # Tab 2: Ask the Cardio
 with tabs[1]:
-    st.markdown('<h1 class="main-header">💬 Ask the Cardio</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">💬 Hỏi đáp Tim mạch</h1>', unsafe_allow_html=True)
     
     st.markdown("""
     <div class="info-card">
-        <h3 style="color:#1D3557;">Your AI Cardiology Assistant</h3>
-        <p style="color:#000000;">Get expert advice on ECG interpretation, heart rhythm disorders, and cardiovascular health. Our AI-powered Cardio Assistant can answer your questions about heart conditions and ECG patterns.</p>
+        <h3 style="color:#1D3557;">Trợ lý AI về Tim mạch</h3>
+        <p style="color:#000000;">Nhận tư vấn chuyên gia về giải thích ECG, rối loạn nhịp tim và sức khỏe tim mạch. Trợ lý AI của chúng tôi có thể trả lời câu hỏi về các tình trạng tim mạch và mẫu ECG.</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -385,7 +386,7 @@ with tabs[1]:
         # Initialize chat history
         if "cardio_chat_history" not in st.session_state:
             st.session_state.cardio_chat_history = [
-                ("Cardio Assistant", "Hello! I'm your cardiology assistant. I can answer questions about ECGs, heart rhythms, and cardiovascular health. How can I help you today?")
+                ("Trợ lý Tim mạch", "Xin chào! Tôi là trợ lý tim mạch của bạn. Tôi có thể trả lời câu hỏi về ECG, nhịp tim và sức khỏe tim mạch. Tôi có thể giúp gì cho bạn?")
             ]
             
         # Initialize a session state for the selected question
@@ -396,12 +397,12 @@ with tabs[1]:
         try:
             GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
             if not GEMINI_API_KEY:
-                st.error("API key is missing! Add it to Streamlit secrets.")
+                st.error("Thiếu API key! Vui lòng thêm vào Streamlit secrets.")
                 has_api_key = False
             else:
                 has_api_key = True
         except:
-            st.warning("To enable the Cardio Assistant chatbot with Gemini AI, please add your Gemini API key to Streamlit secrets. Using the built-in cardio knowledge base for now.")
+            st.warning("Để kích hoạt chatbot với Gemini AI, vui lòng thêm Gemini API key vào Streamlit secrets. Hiện đang sử dụng cơ sở kiến thức có sẵn.")
             GEMINI_API_KEY = None
             has_api_key = False
         
@@ -412,28 +413,28 @@ with tabs[1]:
                 genai.configure(api_key=GEMINI_API_KEY)
                 
                 gemini_prompt = f"""
-                You are a cardiology assistant specialized in ECG interpretation, heart rhythm disorders, and cardiovascular health.
-                Answer only cardiology and ECG-related queries with medically accurate information.
-                If a question is unrelated to cardiology, politely inform the user that you can only answer 
-                heart and ECG-related questions.
+                Bạn là trợ lý tim mạch chuyên về giải thích ECG, rối loạn nhịp tim và sức khỏe tim mạch.
+                Chỉ trả lời các câu hỏi liên quan đến tim mạch và ECG với thông tin y tế chính xác.
+                Nếu câu hỏi không liên quan đến tim mạch, hãy lịch sự thông báo rằng bạn chỉ có thể trả lời 
+                các câu hỏi về tim và ECG.
                 
-                Especially focus on these conditions and ECG patterns:
-                - Normal sinus rhythm
-                - Atrial Fibrillation
-                - Atrial Flutter
-                - Ventricular tachycardia
-                - QT prolongation
-                - ST elevation and depression
-                - Heart blocks (first, second, third degree)
-                - Bundle branch blocks
-                - Premature ventricular contractions
-                - Premature atrial contractions
-                - ECG lead placement and interpretation
+                Đặc biệt tập trung vào các tình trạng và mẫu ECG sau:
+                - Nhịp xoang bình thường
+                - Rung nhĩ (Atrial Fibrillation)
+                - Cuồng nhĩ (Atrial Flutter)
+                - Nhịp nhanh thất
+                - Kéo dài khoảng QT
+                - ST chênh lên và chênh xuống
+                - Blốc tim (độ 1, độ 2, độ 3)
+                - Blốc nhánh bó
+                - Co thắt thất sớm
+                - Co thắt nhĩ sớm
+                - Vị trí chuyển đạo và giải thích ECG
                 
-                **User's Question:** {prompt}
-                Provide a clear, concise, and accurate response about cardiology and ECG interpretation.
+                **Câu hỏi của người dùng:** {prompt}
+                Hãy cung cấp câu trả lời rõ ràng, ngắn gọn và chính xác bằng tiếng Việt về tim mạch và giải thích ECG.
                 """
-                model = genai.GenerativeModel("gemini-1.5-pro-latest")
+                model = genai.GenerativeModel("gemini-2.5-pro")
                 response = model.generate_content(gemini_prompt)
                 
                 return response.text
@@ -462,59 +463,63 @@ with tabs[1]:
                     "heart attack": "A heart attack (myocardial infarction) occurs when blood flow to part of the heart muscle is blocked. On an ECG, it can show ST segment elevation, Q waves, or T wave inversions depending on the timing and location of the infarction."
                 }
                 
-                response = "I don't have specific information about that in my cardiology knowledge base. Please ask something related to ECGs or heart conditions."
+                response = "Tôi không có thông tin cụ thể về điều đó trong cơ sở kiến thức tim mạch của mình. Vui lòng hỏi điều gì đó liên quan đến ECG hoặc tình trạng tim mạch."
                 
-                # Simple keyword matching
+                # Simple keyword matching - support both Vietnamese and English
                 prompt_lower = prompt.lower()
                 for keyword, info in cardio_knowledge.items():
                     if keyword.lower() in prompt_lower:
                         response = info
                         break
                 
-                # General queries about ECG
-                if "what is" in prompt_lower and "ecg" in prompt_lower:
+                # General queries about ECG (Vietnamese)
+                if any(word in prompt_lower for word in ["ecg là gì", "điện tim đồ", "điện tâm đồ"]):
                     response = cardio_knowledge["ecg"]
                 
-                # Queries about rhythm disorders
-                if "rhythm disorder" in prompt_lower or "arrhythmia" in prompt_lower:
+                # Queries about rhythm disorders (Vietnamese)
+                if any(word in prompt_lower for word in ["rối loạn nhịp", "loạn nhịp tim", "arrhythmia"]):
                     response = cardio_knowledge["arrhythmia"]
+                
+                # Atrial fibrillation (Vietnamese)
+                if any(word in prompt_lower for word in ["rung nhĩ", "atrial fibrillation"]):
+                    response = cardio_knowledge["atrial fibrillation"]
                 
                 return response
             
         # User input - note that we're using the session state value as the default
-        user_query = st.text_input("Ask your question about ECG interpretation or heart health:", 
+        user_query = st.text_input("Đặt câu hỏi về giải thích ECG hoặc sức khỏe tim mạch:", 
                                   value=st.session_state.selected_cardio_question,
                                   key="cardio_assistant_query")
         
         # After the user submits a question, clear the selected_question
-        if st.button("Ask Cardio Assistant"):
+        if st.button("Hỏi Trợ lý Tim mạch"):
             if user_query:
-                with st.spinner("Cardio Assistant is thinking..."):
+                with st.spinner("Trợ lý đang suy nghĩ..."):
                     try:
                         # Get the response
                         response = generate_cardio_response(user_query)
                         # Add to chat history
-                        st.session_state.cardio_chat_history.append(("You", user_query))
-                        st.session_state.cardio_chat_history.append(("Cardio Assistant", response))
+                        st.session_state.cardio_chat_history.append(("Bạn", user_query))
+                        st.session_state.cardio_chat_history.append(("Trợ lý Tim mạch", response))
                         # Clear the selected question after submission
                         st.session_state.selected_cardio_question = ""
                     except Exception as e:
-                        st.error(f"Error generating response: {str(e)}")
+                        st.error(f"Lỗi khi tạo câu trả lời: {str(e)}")
                         
     # Display chat history in tablet-like response area
     if "cardio_chat_history" in st.session_state and len(st.session_state.cardio_chat_history) > 0:
-        st.subheader("Conversation with Cardio Assistant")
+        st.subheader("Cuộc trò chuyện với Trợ lý Tim mạch")
         
         # Create a tablet-like container for the conversation
         with st.container():
             st.markdown('<div class="tablet-response">', unsafe_allow_html=True)
             
             for i, (role, message) in enumerate(st.session_state.cardio_chat_history):
-                if role == "You":
+                if role == "Bạn":
                     st.markdown(f'<div class="user-container"><div class="chat-message-user"><strong>👨‍⚕️ {role}:</strong> {message}</div></div>', unsafe_allow_html=True)
                 else:
                     # For the latest bot response, add the typewriter effect
-                    if i == len(st.session_state.cardio_chat_history) - 1 and role == "Cardio Assistant":
+                    if i == len(st.session_state.cardio_chat_history) - 1 and role == "Trợ lý Tim mạch":
                         st.markdown(f'<div class="bot-container"><div class="chat-message-bot"><strong>🫀 {role}:</strong> <span class="typewriter-text">{message}</span></div></div>', unsafe_allow_html=True)
                     else:
                         st.markdown(f'<div class="bot-container"><div class="chat-message-bot"><strong>🫀 {role}:</strong> {message}</div></div>', unsafe_allow_html=True)
@@ -522,14 +527,14 @@ with tabs[1]:
             st.markdown('</div>', unsafe_allow_html=True)
     
     # Add some common questions as examples
-    st.markdown('<h3 class="section-header">Common Questions</h3>', unsafe_allow_html=True)
+    st.markdown('<h3 class="section-header">Câu hỏi Thường gặp</h3>', unsafe_allow_html=True)
     
     example_questions = [
-        "What does a normal ECG look like?",
-        "How can I identify atrial fibrillation on an ECG?",
-        "What causes ST elevation on an ECG?",
-        "What is the QT interval and why is it important?",
-        "How do heart blocks appear on an ECG?"
+        "ECG bình thường trông như thế nào?",
+        "Làm thế nào để nhận biết rung nhĩ trên ECG?",
+        "Nguyên nhân gây ST chênh lên trên ECG là gì?",
+        "Khoảng QT là gì và tại sao nó quan trọng?",
+        "Blốc tim xuất hiện như thế nào trên ECG?"
     ]
     
     # Create functions for handling button clicks
@@ -549,10 +554,10 @@ with tabs[1]:
     st.markdown("---")
     st.markdown("""
     <div style='background-color: #f8d7da; padding: 10px; border-radius: 5px; margin-top: 20px;'>
-        <p style='color: #721c24; margin: 0;'><strong>Important Disclaimer:</strong> This AI assistant provides general information only and is not a substitute for professional medical advice. Always consult a healthcare provider for diagnosis and treatment of medical conditions.</p>
+        <p style='color: #721c24; margin: 0;'><strong>Lưu ý quan trọng:</strong> Trợ lý AI này chỉ cung cấp thông tin tham khảo và không thay thế cho tư vấn y tế chuyên nghiệp. Luôn tham khảo ý kiến bác sĩ để chẩn đoán và điều trị các tình trạng bệnh lý.</p>
     </div>
     """, unsafe_allow_html=True)
 
 # Footer
 st.markdown("---")
-st.markdown("<div class='footer-text'>Made for Machine Learning in Healthcare with Streamlit</div>", unsafe_allow_html=True)
+st.markdown("<div class='footer-text'>Phát triển bởi BS. Hà Ngọc Cường - Ứng dụng Machine Learning trong Y tế</div>", unsafe_allow_html=True)
