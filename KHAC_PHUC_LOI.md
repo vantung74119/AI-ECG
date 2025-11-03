@@ -76,7 +76,7 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
 ### API Key:
 - ✅ Google Gemini API key đã được thêm vào `.streamlit/secrets.toml`
-- API Key: `AIzaSyDACqR1Vez6NbKrL-prHMiZqWFc-A_Glg4`
+- API Key:
 
 ## 🚀 Cách chạy ứng dụng
 
